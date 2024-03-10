@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 )
 
 type loginer interface {
-	Login(email, password string) (models.TokenPair, error)
+	Login(ctx context.Context, email, password string) (models.TokenPair, error)
 }
 
 func Login(logger *slog.Logger, loginer loginer) http.HandlerFunc {
@@ -25,7 +26,7 @@ func Login(logger *slog.Logger, loginer loginer) http.HandlerFunc {
 		}
 		log.Debug("got data from request", slog.Any("request_body", req))
 
-		tp, err := loginer.Login(req.Email, req.Password)
+		tp, err := loginer.Login(context.Background(), req.Email, req.Password)
 		if err != nil {
 			log.Warn("cant login user", slog.String("error", err.Error()))
 			http.Error(w, "error while logging", http.StatusInternalServerError)

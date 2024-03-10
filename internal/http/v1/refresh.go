@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -10,7 +11,7 @@ import (
 )
 
 type refresher interface {
-	RefreshToken(access, refresh string) (models.TokenPair, error)
+	RefreshToken(ctx context.Context, access, refresh string) (models.TokenPair, error)
 }
 
 func Refresh(logger *slog.Logger, refresher refresher) http.HandlerFunc {
@@ -34,7 +35,7 @@ func Refresh(logger *slog.Logger, refresher refresher) http.HandlerFunc {
 			http.Error(w, "empty refresh token", http.StatusBadRequest)
 			return
 		}
-		tp, err := refresher.RefreshToken(req.TokenPair.AccessToken, req.TokenPair.RefreshToken)
+		tp, err := refresher.RefreshToken(context.Background(), req.TokenPair.AccessToken, req.TokenPair.RefreshToken)
 		if err != nil {
 			log.Warn("cant refresh token", slog.String("error", err.Error()))
 			http.Error(w, "error while refreshing token", http.StatusInternalServerError)

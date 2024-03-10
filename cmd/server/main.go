@@ -14,6 +14,7 @@ import (
 	c "github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	v1 "github.com/EwvwGeN/InHouseAd_assignment/internal/http/v1"
 	l "github.com/EwvwGeN/InHouseAd_assignment/internal/logger"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 )
 
 var (
@@ -33,20 +34,22 @@ func main() {
 	logger.Info("logger is initiated")
 	logger.Debug("config data", slog.Any("config", cfg))
 
+	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, nil, nil)
+
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(
 		"api/register",
-		v1.Register(logger, nil, cfg.Validator),
+		v1.Register(logger, authService, cfg.Validator),
 		http.MethodPost,
 	)
 	hserver.RegisterHandler(
 		"api/login",
-		v1.Login(logger, nil),
+		v1.Login(logger, authService),
 		http.MethodPost,
 	)
 	hserver.RegisterHandler(
 		"api/refresh",
-		v1.Refresh(logger, nil),
+		v1.Refresh(logger, authService),
 		http.MethodPost,
 	)
 	mainCtx, cancel := context.WithCancel(context.Background())

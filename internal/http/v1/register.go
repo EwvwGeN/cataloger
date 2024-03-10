@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -11,7 +12,7 @@ import (
 )
 
 type registrator interface{
-	RegisterUser(email, password string) (string, error)
+	RegisterUser(ctx context.Context, email, password string) (string, error)
 }
 
 func Register(logger *slog.Logger, registrator registrator, validateCfg config.Validator) http.HandlerFunc {
@@ -36,7 +37,7 @@ func Register(logger *slog.Logger, registrator registrator, validateCfg config.V
 			http.Error(w, "error while validating password", http.StatusBadRequest)
 			return
 		}
-		newID, err := registrator.RegisterUser(req.Email, req.Password)
+		newID, err := registrator.RegisterUser(context.Background(), req.Email, req.Password)
 		if err != nil{
 			log.Info("error while registration")
 			http.Error(w, "error while registration", http.StatusInternalServerError)
