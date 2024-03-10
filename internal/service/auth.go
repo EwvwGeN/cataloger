@@ -121,7 +121,7 @@ func (a *auth) RefreshToken(ctx context.Context, access, refresh string) (models
 		return models.TokenPair{}, fmt.Errorf("failed refresh token pair: %w", err)
 	}
 	if time.Now().Unix() > user.ExpiresAt {
-		a.log.Info("not valid refresh token", slog.String("error", err.Error()))
+		a.log.Info("refresh token live expired")
 		return models.TokenPair{}, fmt.Errorf("failed refresh token pair: %w", ErrValidRefresh)
 	}
 	token, err := a.tokenManager.CreateJWT(user, a.tokenTTL)
