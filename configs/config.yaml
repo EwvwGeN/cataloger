@@ -2,3 +2,4 @@ log_level: debug
 http:
   port: 9099
   host: localhost
+  ping_timeout: 2s

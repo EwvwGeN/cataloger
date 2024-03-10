@@ -7,21 +7,30 @@ import (
 )
 
 type Config struct {
-	LogLevel     string       `yaml:"log_level"`
-	HttpConfig HttpConfig `yaml:"http"`
+	LogLevel     string     `yaml:"log_level"`
+	HttpConfig   HttpConfig `yaml:"http"`
+	Validator    Validator  `yaml:"validator"`
 }
 
 func LoadConfig(path string) (*Config, error) {
-	var cfg Config
-	loadEnv(&cfg)
-	if path == "" {
-		return &cfg, nil
+	var (
+		cfg Config
+		err error
+		fileData []byte
+	)
+	if path != "" {
+		fileData, err = os.ReadFile(path)
+		if err != nil {
+			return nil, err
+		}
+		err = yaml.Unmarshal(fileData, &cfg)
+	} else {
+		err = loadEnv(&cfg)
 	}
-	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	err = yaml.Unmarshal(file, &cfg)
+	err = cfg.Validator.mustBeRegex()
 	if err != nil {
 		return nil, err
 	}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 )
 
 type innerStack struct {
@@ -49,7 +50,7 @@ func (is *innerStack) isEmpty() bool {
 // loadEnv parse  tags from the structure and inserts values into its fields
 //
 // yaml tags are used
-func loadEnv(cfg *Config) {
+func loadEnv(cfg *Config) error {
 	cfgType := reflect.ValueOf(cfg).Elem()
 	stack := &innerStack{}
 	stack.push(cfgType, "")
@@ -75,9 +76,12 @@ func loadEnv(cfg *Config) {
 			tag = filedTag
 		}
 		fmt.Println(tag)
-		setValue(nestedField, getEnv(tag))
+		if err := setValue(nestedField, getEnv(tag)); err != nil {
+			return err
+		}
 		*curFieldIndex++
 	}
+	return nil
 }
 
 func getEnv(envKey string) string {
@@ -87,6 +91,16 @@ func getEnv(envKey string) string {
 	return ""
 }
 
-func setValue(r reflect.Value, value string) {
-	r.Set(reflect.ValueOf(value))
+func setValue(r reflect.Value, value string) error {
+	switch r.Kind() {
+	case reflect.Int64:
+		dur, err := time.ParseDuration(value)
+		if err != nil {
+			return err
+		}
+		r.SetInt(reflect.ValueOf(dur).Int())
+	default:
+		r.Set(reflect.ValueOf(value))
+	}
+	return nil
 }
