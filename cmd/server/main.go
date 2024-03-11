@@ -13,6 +13,7 @@ import (
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/app"
 	c "github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	v1 "github.com/EwvwGeN/InHouseAd_assignment/internal/http/v1"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/jwt"
 	l "github.com/EwvwGeN/InHouseAd_assignment/internal/logger"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 )
@@ -34,7 +35,9 @@ func main() {
 	logger.Info("logger is initiated")
 	logger.Debug("config data", slog.Any("config", cfg))
 
-	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, nil, nil)
+	jwtManager := jwt.NewJwtManager(cfg.SecretKey)
+
+	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, nil, jwtManager)
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(

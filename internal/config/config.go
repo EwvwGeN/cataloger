@@ -13,6 +13,7 @@ type Config struct {
 	Validator    Validator  `yaml:"validator"`
 	TokenTTL time.Duration `yaml:"token_ttl"`
 	RefreshTTL time.Duration `yaml:"refresh_ttl"`
+	SecretKey string `yaml:"secret_key"`
 }
 
 func LoadConfig(path string) (*Config, error) {

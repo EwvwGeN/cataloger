@@ -3,3 +3,4 @@ http:
   port: 9099
   host: localhost
   ping_timeout: 2s
+secret_key: test-key
