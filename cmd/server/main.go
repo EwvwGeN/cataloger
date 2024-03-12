@@ -63,6 +63,26 @@ func main() {
 		v1.Refresh(logger, authService),
 		http.MethodPost,
 	)
+	hserver.RegisterHandler(
+		"/api/category/add",
+		v1.CategoryAdd(logger, nil),
+		http.MethodPost,
+	)
+	hserver.RegisterHandler(
+		"/api/category/{catCode}/edit",
+		v1.CategoryEdit(logger, nil),
+		http.MethodPatch,
+	)
+	hserver.RegisterHandler(
+		"/api/category/{catCode}",
+		v1.CategoryGetOne(logger, nil),
+		http.MethodGet,
+	)
+	hserver.RegisterHandler(
+		"/api/categories",
+		v1.CategoryGetAll(logger, nil),
+		http.MethodGet,
+	)
 	logger.Info("loading end")
 	errCh := hserver.RunServer(mainCtx)
 	stopChecker := make(chan os.Signal, 1)
