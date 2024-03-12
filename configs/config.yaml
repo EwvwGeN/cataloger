@@ -3,4 +3,14 @@ http:
   port: 9099
   host: localhost
   ping_timeout: 2s
+postgres:
+  db_con_format: postgres
+  db_host: localhost
+  db_port: 5432
+  db_user: user
+  db_pass: password
+  db_name: InHouseAd_assignment
+  db_tbl_user: test-user
+refresh_ttl: 1h
+token_ttl: 10m
 secret_key: test-key

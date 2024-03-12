@@ -6,6 +6,5 @@ type RegisterRequest struct {
 }
 
 type RegisterReqsponse struct {
-	Registered bool   `json:"registered"`
-	NewUserId  string `json:"new_user_id"`
+	Registered bool `json:"registered"`
 }

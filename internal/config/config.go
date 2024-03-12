@@ -10,6 +10,7 @@ import (
 type Config struct {
 	LogLevel     string     `yaml:"log_level"`
 	HttpConfig   HttpConfig `yaml:"http"`
+	PostgresConfig PostgresConfig `yaml:"postgres"`
 	Validator    Validator  `yaml:"validator"`
 	TokenTTL time.Duration `yaml:"token_ttl"`
 	RefreshTTL time.Duration `yaml:"refresh_ttl"`

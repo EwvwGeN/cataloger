@@ -32,7 +32,7 @@ func (suite *testSuite) Test_CreateTokenHappyPass(){
 	creatingTime := time.Now()
 	suite.Require().NoError(err)
 	suite.Require().NotEmpty(token)
-	claims, err := suite.jwtManager.ParseJwt(token)
+	claims, err := suite.jwtManager.MustParseJwt(token)
 	suite.Require().NoError(err)
 	suite.Equal(user.Email, claims["email"].(string))
 	suite.InDelta(creatingTime.Add(duration).Unix(), claims["exp"].(float64), 1)

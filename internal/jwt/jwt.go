@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -43,12 +44,15 @@ func (jm *jwtManager) CreateRefresh() (refresh string, err error) {
 	return fmt.Sprintf("%x", buffer), nil
 }
 
-func (jm *jwtManager) ParseJwt(token string) (jwt.MapClaims, error) {
+func (jm *jwtManager) MustParseJwt(token string) (jwt.MapClaims, error) {
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		return []byte(jm.secretKey), nil
 	})
-	if err != nil {
-		return nil, err
+	var validErr *jwt.ValidationError
+	if errors.As(err, &validErr) {
+		if !(validErr.Errors == jwt.ValidationErrorExpired) {
+			return nil, err
+		}
 	}
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 	if !ok {

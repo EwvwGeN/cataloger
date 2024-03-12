@@ -3,16 +3,18 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/validator"
 )
 
 type registrator interface{
-	RegisterUser(ctx context.Context, email, password string) (string, error)
+	RegisterUser(ctx context.Context, email, password string) (error)
 }
 
 func Register(logger *slog.Logger, registrator registrator, validateCfg config.Validator) http.HandlerFunc {
@@ -37,22 +39,24 @@ func Register(logger *slog.Logger, registrator registrator, validateCfg config.V
 			http.Error(w, "error while validating password", http.StatusBadRequest)
 			return
 		}
-		newID, err := registrator.RegisterUser(context.Background(), req.Email, req.Password)
+		err := registrator.RegisterUser(context.Background(), req.Email, req.Password)
 		if err != nil{
-			log.Info("error while registration")
+			if errors.Is(err, service.ErrUserExist) {
+				log.Warn("failed to save user", slog.String("error", err.Error()))
+				http.Error(w, "error while registration: user already exist", http.StatusBadRequest)
+				return
+			}
+			log.Error("failed to save user", slog.String("error", err.Error()))
 			http.Error(w, "error while registration", http.StatusInternalServerError)
 			return
 		}
 		res := &httpmodels.RegisterReqsponse{
 			Registered: true,
-			NewUserId: newID,
 		}
 		resData, err := json.Marshal(res)
 		if err != nil {
-			// if error happend we still need to send new use id bcz he is already created
 			log.Error("cant encode response", slog.Any("response", res), slog.String("error", err.Error()))
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(newID))
+			http.Error(w, "error while registration", http.StatusInternalServerError)
 		}
 		w.Header().Add("Content-Type", "application/json")
 		w.WriteHeader(http.StatusCreated)

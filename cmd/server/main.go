@@ -16,6 +16,7 @@ import (
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/jwt"
 	l "github.com/EwvwGeN/InHouseAd_assignment/internal/logger"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/storage"
 )
 
 var (
@@ -34,28 +35,35 @@ func main() {
 	logger := l.SetupLogger(cfg.LogLevel)
 	logger.Info("logger is initiated")
 	logger.Debug("config data", slog.Any("config", cfg))
+	mainCtx, cancel := context.WithCancel(context.Background())
 
 	jwtManager := jwt.NewJwtManager(cfg.SecretKey)
 
-	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, nil, jwtManager)
+	postgres, err := storage.NewPostgresProvider(mainCtx, cfg.PostgresConfig)
+	if err != nil {
+		logger.Error("failed to get postgres provider", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, postgres, jwtManager)
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(
-		"api/register",
+		"/api/register",
 		v1.Register(logger, authService, cfg.Validator),
 		http.MethodPost,
 	)
 	hserver.RegisterHandler(
-		"api/login",
+		"/api/login",
 		v1.Login(logger, authService),
 		http.MethodPost,
 	)
 	hserver.RegisterHandler(
-		"api/refresh",
+		"/api/refresh",
 		v1.Refresh(logger, authService),
 		http.MethodPost,
 	)
-	mainCtx, cancel := context.WithCancel(context.Background())
+	logger.Info("loading end")
 	errCh := hserver.RunServer(mainCtx)
 	stopChecker := make(chan os.Signal, 1)
 	signal.Notify(stopChecker, syscall.SIGTERM, syscall.SIGINT)
