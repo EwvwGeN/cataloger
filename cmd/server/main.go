@@ -12,6 +12,7 @@ import (
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/app"
 	c "github.com/EwvwGeN/InHouseAd_assignment/internal/config"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/http/middleware"
 	v1 "github.com/EwvwGeN/InHouseAd_assignment/internal/http/v1"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/jwt"
 	l "github.com/EwvwGeN/InHouseAd_assignment/internal/logger"
@@ -65,13 +66,18 @@ func main() {
 	)
 	hserver.RegisterHandler(
 		"/api/category/add",
-		v1.CategoryAdd(logger, nil),
+		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryAdd(logger, nil)),
 		http.MethodPost,
 	)
 	hserver.RegisterHandler(
 		"/api/category/{catCode}/edit",
-		v1.CategoryEdit(logger, nil),
+		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryEdit(logger, nil)),
 		http.MethodPatch,
+	)
+	hserver.RegisterHandler(
+		"/api/category/{catCode}/delete",
+		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryDelete(logger, nil)),
+		http.MethodGet,
 	)
 	hserver.RegisterHandler(
 		"/api/category/{catCode}",

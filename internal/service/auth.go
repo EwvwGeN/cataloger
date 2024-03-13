@@ -9,7 +9,6 @@ import (
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/storage"
-	"github.com/golang-jwt/jwt"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -30,7 +29,7 @@ type dbRepo interface{
 type tokenManager interface{
 	CreateJWT(user models.User, ttl time.Duration) (string, error)
 	CreateRefresh() (string, error)
-	MustParseJwt(token string) (jwt.MapClaims, error)
+	MustParseJwt(token string) (map[string]interface{}, error)
 }
 
 func NewAuthService(log *slog.Logger, ttl time.Duration, rttl time.Duration, dbRepo dbRepo, tokenManager tokenManager) *auth {
