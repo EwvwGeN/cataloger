@@ -16,11 +16,11 @@ type auth struct {
 	log *slog.Logger
 	tokenTTL time.Duration
 	refreshTTL time.Duration
-	dbRepo dbRepo
+	userRepo userRepo
 	tokenManager tokenManager
 }
 
-type dbRepo interface{
+type userRepo interface{
 	SaveUser(ctx context.Context, email string, passHash string) (error)
 	GetUserByEmail(ctx context.Context, email string) (models.User, error)
 	SaveRefreshToken(ctx context.Context, email string, refreshToken string, rttl int64) (error)
@@ -32,12 +32,12 @@ type tokenManager interface{
 	MustParseJwt(token string) (map[string]interface{}, error)
 }
 
-func NewAuthService(log *slog.Logger, ttl time.Duration, rttl time.Duration, dbRepo dbRepo, tokenManager tokenManager) *auth {
+func NewAuthService(log *slog.Logger, ttl time.Duration, rttl time.Duration, userRepo userRepo, tokenManager tokenManager) *auth {
 	return &auth{
 		log: log.With(slog.String("service", "auth")),
 		tokenTTL: ttl,
 		refreshTTL: rttl,
-		dbRepo: dbRepo,
+		userRepo: userRepo,
 		tokenManager: tokenManager,
 	}
 }
@@ -50,7 +50,7 @@ func (a *auth) RegisterUser(ctx context.Context, email, password string) (error)
 		a.log.Error("failed to generate password hash", slog.String("error", err.Error()))
 		return fmt.Errorf("can't register user: %w", err)
 	}
-	err = a.dbRepo.SaveUser(ctx, email, string(passHash))
+	err = a.userRepo.SaveUser(ctx, email, string(passHash))
 	if err != nil {
 		if errors.Is(err, storage.ErrUserExist) {
 			a.log.Warn("failed to save user", slog.String("error", err.Error()))
@@ -66,7 +66,7 @@ func (a *auth) RegisterUser(ctx context.Context, email, password string) (error)
 func (a *auth) Login(ctx context.Context, email, password string) (models.TokenPair, error) {
 	a.log.Info("attempt to login user")
 	a.log.Debug("got user email", slog.String("email", email))
-	user, err := a.dbRepo.GetUserByEmail(ctx, email)
+	user, err := a.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		a.log.Error("failed to get user", slog.String("error", err.Error()))
 		return models.TokenPair{}, fmt.Errorf("can't login user: %w", err)
@@ -90,7 +90,7 @@ func (a *auth) Login(ctx context.Context, email, password string) (models.TokenP
 		a.log.Error("failed to generate refresh token hash", slog.String("error", err.Error()))
 		return models.TokenPair{}, fmt.Errorf("can't login user: %w", err)
 	}
-	err = a.dbRepo.SaveRefreshToken(ctx, email, string(rfsHash), time.Now().Add(a.refreshTTL).Unix())
+	err = a.userRepo.SaveRefreshToken(ctx, email, string(rfsHash), time.Now().Add(a.refreshTTL).Unix())
 	if err != nil {
 		a.log.Error("failed to save refresh token", slog.String("error", err.Error()))
 		return models.TokenPair{}, fmt.Errorf("can't login user: %w", err)
@@ -114,7 +114,7 @@ func (a *auth) RefreshToken(ctx context.Context, access, refresh string) (models
 		a.log.Info("failed get email from token")
 		return models.TokenPair{}, fmt.Errorf("failed refresh token pair: %w", err)
 	}
-	user, err := a.dbRepo.GetUserByEmail(ctx, email.(string))
+	user, err := a.userRepo.GetUserByEmail(ctx, email.(string))
 	if err != nil {
 		a.log.Error("failed get user", slog.String("error", err.Error()))
 		return models.TokenPair{}, fmt.Errorf("failed refresh token pair: %w", err)
@@ -144,7 +144,7 @@ func (a *auth) RefreshToken(ctx context.Context, access, refresh string) (models
 		a.log.Error("failed to generate refresh token hash", slog.String("error", err.Error()))
 		return models.TokenPair{}, fmt.Errorf("can't login user: %w", err)
 	}
-	err = a.dbRepo.SaveRefreshToken(ctx, email.(string), string(rfsHash), time.Now().Add(a.refreshTTL).Unix())
+	err = a.userRepo.SaveRefreshToken(ctx, email.(string), string(rfsHash), time.Now().Add(a.refreshTTL).Unix())
 	if err != nil {
 		a.log.Error("failed to save refresh token", slog.String("error", err.Error()))
 		return models.TokenPair{}, fmt.Errorf("can't login user: %w", err)

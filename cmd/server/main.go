@@ -47,6 +47,7 @@ func main() {
 	}
 
 	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, postgres, jwtManager)
+	categoryService := service.NewCategoryService(logger, nil)
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(
@@ -66,27 +67,27 @@ func main() {
 	)
 	hserver.RegisterHandler(
 		"/api/category/add",
-		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryAdd(logger, nil)),
+		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryAdd(logger, cfg.Validator, categoryService)),
 		http.MethodPost,
 	)
 	hserver.RegisterHandler(
 		"/api/category/{catCode}/edit",
-		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryEdit(logger, nil)),
+		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryEdit(logger, categoryService)),
 		http.MethodPatch,
 	)
 	hserver.RegisterHandler(
 		"/api/category/{catCode}/delete",
-		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryDelete(logger, nil)),
+		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryDelete(logger, categoryService)),
 		http.MethodGet,
 	)
 	hserver.RegisterHandler(
 		"/api/category/{catCode}",
-		v1.CategoryGetOne(logger, nil),
+		v1.CategoryGetOne(logger, categoryService),
 		http.MethodGet,
 	)
 	hserver.RegisterHandler(
 		"/api/categories",
-		v1.CategoryGetAll(logger, nil),
+		v1.CategoryGetAll(logger, categoryService),
 		http.MethodGet,
 	)
 	logger.Info("loading end")

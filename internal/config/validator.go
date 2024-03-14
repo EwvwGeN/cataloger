@@ -7,8 +7,11 @@ import (
 )
 
 type Validator struct {
-	EmailValidate    string `mapstructure:"email"`
-	PasswordValidate string `mapstructure:"password"`
+	EmailValidate    string `yaml:"email"`
+	PasswordValidate string `yaml:"password"`
+	CategoryNameValidate string `yaml:"category_name"`
+	CategoryCodeValidate string `yaml:"category_code"`
+	CategoryDescValidate string `yaml:"category_desc"`
 }
 
 func (v *Validator) mustBeRegex() error {

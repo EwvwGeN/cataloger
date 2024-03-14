@@ -6,14 +6,17 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/validator"
 )
 
 type categoryAdder interface {
-	AddCategory(ctx context.Context, catName, catCode, catDesc string) (error)
+	AddCategory(ctx context.Context, category models.Category) (error)
 }
 
-func CategoryAdd(logger *slog.Logger, cacategoryAdder categoryAdder) http.HandlerFunc {
+func CategoryAdd(logger *slog.Logger, validCfg config.Validator, cacategoryAdder categoryAdder) http.HandlerFunc {
 	log := logger.With(slog.String("handler", "category_add"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Info("attempt to add category")
@@ -24,7 +27,22 @@ func CategoryAdd(logger *slog.Logger, cacategoryAdder categoryAdder) http.Handle
 			return
 		}
 		log.Debug("got data from request", slog.Any("request_body", req))
-		err := cacategoryAdder.AddCategory(context.Background(), req.Category.Name, req.Category.Code, req.Category.Description)
+		if !validator.ValideteByRegex(req.Category.Name, validCfg.CategoryNameValidate) {
+			log.Info("validate error: incorrect category name", slog.String("name", req.Category.Name))
+			http.Error(w, "error while validating category name", http.StatusBadRequest)
+			return
+		}
+		if !validator.ValideteByRegex(req.Category.Code, validCfg.CategoryNameValidate) {
+			log.Info("validate error: incorrect category code", slog.String("code", req.Category.Code))
+			http.Error(w, "error while validating category code", http.StatusBadRequest)
+			return
+		}
+		if !validator.ValideteByRegex(req.Category.Name, validCfg.CategoryNameValidate) {
+			log.Info("validate error: incorrect category description", slog.String("description", req.Category.Description))
+			http.Error(w, "error while validating category description", http.StatusBadRequest)
+			return
+		}
+		err := cacategoryAdder.AddCategory(context.Background(), req.Category)
 		if err != nil {
 			log.Error("failed to add category", slog.String("error", err.Error()))
 			http.Error(w, "error while adding category", http.StatusInternalServerError)
