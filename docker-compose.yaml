@@ -8,6 +8,7 @@ services:
       POSTGRES_USER: "user"
       POSTGRES_PASSWORD: "password"
       POSTGRES_DB_TBL_USER: "test-user"
+      POSTGRES_DB_TBL_CATEGORY: "test-categories"
     volumes:
       - ./storage/init/:/docker-entrypoint-initdb.d/
       - pg-data:/var/lib/postgresql/data

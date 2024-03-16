@@ -21,7 +21,7 @@ VALUES($1,$2);`, pp.cfg.UserTable), email, passHash)
 			return ErrUserExist
 		}
 	}
-	return err
+	return ErrQuery
 }
 
 func (pp *postgresProvider) GetUserByEmail(ctx context.Context, email string) (models.User, error) {
@@ -40,7 +40,7 @@ WHERE "email"=$1;`,
 	)
 	err := row.Scan(&user.Email, &user.PassHash, &refHash, &expiresAt)
 	if err != nil {
-		return models.User{}, nil
+		return models.User{}, ErrQuery
 	}
 	if refHash != nil {
 		user.RefreshHash = *refHash
@@ -61,5 +61,8 @@ WHERE "email" = $3`,
 	rttl,
 	email,
 	)
-	return err
+	if err != nil {
+		return ErrQuery
+	}
+	return nil
 }

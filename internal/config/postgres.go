@@ -8,4 +8,5 @@ type PostgresConfig struct {
 	Password        string `yaml:"db_pass"`
 	Database        string `yaml:"db_name"`
 	UserTable       string `yaml:"db_tbl_user"`
+	CatogoryTable   string `yaml:"db_tbl_category"`
 }

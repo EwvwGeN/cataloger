@@ -28,6 +28,6 @@ func CategoryDelete(logger *slog.Logger, categoryDeleter categoryDeleter) http.H
 			http.Error(w, "error while deleting category", http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 	}
 }

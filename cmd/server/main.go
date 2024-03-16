@@ -47,7 +47,7 @@ func main() {
 	}
 
 	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, postgres, jwtManager)
-	categoryService := service.NewCategoryService(logger, nil)
+	categoryService := service.NewCategoryService(logger, postgres)
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(
@@ -78,7 +78,7 @@ func main() {
 	hserver.RegisterHandler(
 		"/api/category/{catCode}/delete",
 		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryDelete(logger, categoryService)),
-		http.MethodGet,
+		http.MethodDelete,
 	)
 	hserver.RegisterHandler(
 		"/api/category/{catCode}",

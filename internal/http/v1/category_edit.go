@@ -33,6 +33,11 @@ func CategoryEdit(logger *slog.Logger, categoryEditor categoryEditor) http.Handl
 			return
 		}
 		log.Debug("got data from request", slog.Any("request_body", req))
+		if req.CategoryNewData.Code == nil && req.CategoryNewData.Name == nil && req.CategoryNewData.Description == nil {
+			log.Warn("nothing to update")
+			http.Error(w, "error while editing: nothing to update", http.StatusBadRequest)
+			return
+		}
 		err := categoryEditor.EditCategory(context.Background(), catCode, req.CategoryNewData)
 		if err != nil {
 			log.Error("failed to edit category", slog.String("error", err.Error()))
@@ -49,7 +54,7 @@ func CategoryEdit(logger *slog.Logger, categoryEditor categoryEditor) http.Handl
 			return
 		}
 		w.Header().Add("Content-Type", "application/json")
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 		w.Write(resData)
 	}
 }

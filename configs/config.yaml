@@ -11,6 +11,7 @@ postgres:
   db_pass: password
   db_name: InHouseAd_assignment
   db_tbl_user: test-user
+  db_tbl_category: test-categories
 refresh_ttl: 1h
-token_ttl: 10m
+token_ttl: 240h
 secret_key: test-key
