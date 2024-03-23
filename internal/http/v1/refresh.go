@@ -38,7 +38,8 @@ func Refresh(logger *slog.Logger, refresher refresher) http.HandlerFunc {
 		tp, err := refresher.RefreshToken(context.Background(), req.TokenPair.AccessToken, req.TokenPair.RefreshToken)
 		if err != nil {
 			log.Warn("cant refresh token", slog.String("error", err.Error()))
-			http.Error(w, "error while refreshing token", http.StatusInternalServerError)
+			// edit error handling from RefreshToken()
+			http.Error(w, "error while refreshing token", http.StatusBadRequest)
 			return
 		}
 		res := &httpmodels.RefreshResponse{

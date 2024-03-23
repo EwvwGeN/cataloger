@@ -3,11 +3,13 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 )
 
 type loginer interface {
@@ -29,6 +31,10 @@ func Login(logger *slog.Logger, loginer loginer) http.HandlerFunc {
 		tp, err := loginer.Login(context.Background(), req.Email, req.Password)
 		if err != nil {
 			log.Warn("cant login user", slog.String("error", err.Error()))
+			if errors.Is(err, service.ErrInvalidCredentials) {
+				http.Error(w, "error while logging", http.StatusBadRequest)
+				return
+			}
 			http.Error(w, "error while logging", http.StatusInternalServerError)
 			return
 		}

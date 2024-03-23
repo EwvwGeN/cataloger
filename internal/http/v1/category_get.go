@@ -24,7 +24,7 @@ func CategoryGetOne(logger *slog.Logger, categoryOneGetter categoryOneGetter) ht
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Info("attempt to get category")
 		catCode, ok := mux.Vars(r)["catCode"]
-		if !ok {
+		if !ok || catCode == "" {
 			log.Warn("failed to get category code")
 			http.Error(w, "error while getting category: empty category code", http.StatusBadRequest)
 			return
@@ -32,7 +32,7 @@ func CategoryGetOne(logger *slog.Logger, categoryOneGetter categoryOneGetter) ht
 		category, err := categoryOneGetter.GetOneCategory(context.Background(), catCode)
 		if err != nil {
 			log.Error("failed to get category", slog.String("error", err.Error()))
-			http.Error(w, "error while getting category", http.StatusInternalServerError)
+			http.Error(w, "error while getting category", http.StatusBadRequest)
 			return
 		}
 		res := &httpmodels.CategoryGetOneResponse{

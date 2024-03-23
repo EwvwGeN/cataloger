@@ -72,7 +72,7 @@ func main() {
 	)
 	hserver.RegisterHandler(
 		"/api/category/{catCode}/edit",
-		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryEdit(logger, categoryService)),
+		middleware.AuthMiddleware(logger, jwtManager, v1.CategoryEdit(logger, cfg.Validator, categoryService)),
 		http.MethodPatch,
 	)
 	hserver.RegisterHandler(

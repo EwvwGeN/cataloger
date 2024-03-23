@@ -12,11 +12,13 @@ import (
 
 type jwtManager struct {
 	secretKey string
+	randSouce rand.Source
 }
 
 func NewJwtManager(secretKey string) *jwtManager {
 	return &jwtManager{
 		secretKey: secretKey,
+		randSouce: rand.NewSource(time.Now().Unix()),
 	}
 }
 
@@ -37,7 +39,7 @@ func (jm *jwtManager) CreateJWT(user models.User, ttl time.Duration) (token stri
 
 func (jm *jwtManager) CreateRefresh() (refresh string, err error) {
 	buffer := make([]byte, 32)
-	gen := rand.New(rand.NewSource(time.Now().Unix()))
+	gen := rand.New(jm.randSouce)
 	if _, err = gen.Read(buffer); err != nil {
 		return "", ErrRefreshGenerate
 	}

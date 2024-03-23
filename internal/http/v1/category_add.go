@@ -3,12 +3,14 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/validator"
 )
 
@@ -32,20 +34,25 @@ func CategoryAdd(logger *slog.Logger, validCfg config.Validator, cacategoryAdder
 			http.Error(w, "error while validating category name", http.StatusBadRequest)
 			return
 		}
-		if !validator.ValideteByRegex(req.Category.Code, validCfg.CategoryNameValidate) {
+		if !validator.ValideteByRegex(req.Category.Code, validCfg.CategoryCodeValidate) {
 			log.Info("validate error: incorrect category code", slog.String("code", req.Category.Code))
 			http.Error(w, "error while validating category code", http.StatusBadRequest)
 			return
 		}
-		if !validator.ValideteByRegex(req.Category.Name, validCfg.CategoryNameValidate) {
+		if !validator.ValideteByRegex(req.Category.Description, validCfg.CategoryDescValidate) {
 			log.Info("validate error: incorrect category description", slog.String("description", req.Category.Description))
 			http.Error(w, "error while validating category description", http.StatusBadRequest)
 			return
 		}
 		err := cacategoryAdder.AddCategory(context.Background(), req.Category)
 		if err != nil {
+			if errors.Is(err, service.ErrCategoryExist) {
+				log.Error("failed to add category", slog.String("error", service.ErrCategoryExist.Error()))
+				http.Error(w, "error while adding category: category already exist", http.StatusBadRequest)
+				return
+			}
 			log.Error("failed to add category", slog.String("error", err.Error()))
-			http.Error(w, "error while adding category", http.StatusInternalServerError)
+			http.Error(w, "error while adding category", http.StatusBadRequest)
 			return
 		}
 		res := &httpmodels.CategoryAddResponse {

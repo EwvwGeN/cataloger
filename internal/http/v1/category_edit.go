@@ -6,8 +6,10 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/validator"
 	"github.com/gorilla/mux"
 )
 
@@ -15,7 +17,7 @@ type categoryEditor interface {
 	EditCategory(ctx context.Context, catCode string, category models.CategoryForPatch) (error)
 }
 
-func CategoryEdit(logger *slog.Logger, categoryEditor categoryEditor) http.HandlerFunc {
+func CategoryEdit(logger *slog.Logger, validCfg config.Validator, categoryEditor categoryEditor) http.HandlerFunc {
 	log := logger.With(slog.String("handler", "category_edit"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Info("attempt to edit category")
@@ -36,6 +38,21 @@ func CategoryEdit(logger *slog.Logger, categoryEditor categoryEditor) http.Handl
 		if req.CategoryNewData.Code == nil && req.CategoryNewData.Name == nil && req.CategoryNewData.Description == nil {
 			log.Warn("nothing to update")
 			http.Error(w, "error while editing: nothing to update", http.StatusBadRequest)
+			return
+		}
+		if req.CategoryNewData.Name != nil && !validator.ValideteByRegex(*req.CategoryNewData.Name, validCfg.CategoryNameValidate) {
+			log.Info("validate error: incorrect category new name", slog.String("name", *req.CategoryNewData.Name))
+			http.Error(w, "error while validating category name", http.StatusBadRequest)
+			return
+		}
+		if req.CategoryNewData.Code != nil && !validator.ValideteByRegex(*req.CategoryNewData.Code, validCfg.CategoryCodeValidate) {
+			log.Info("validate error: incorrect category new code", slog.String("code", *req.CategoryNewData.Code))
+			http.Error(w, "error while validating category code", http.StatusBadRequest)
+			return
+		}
+		if req.CategoryNewData.Description != nil && !validator.ValideteByRegex(*req.CategoryNewData.Description, validCfg.CategoryDescValidate) {
+			log.Info("validate error: incorrect category new description", slog.String("description", *req.CategoryNewData.Description))
+			http.Error(w, "error while validating category description", http.StatusBadRequest)
 			return
 		}
 		err := categoryEditor.EditCategory(context.Background(), catCode, req.CategoryNewData)

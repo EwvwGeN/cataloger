@@ -20,6 +20,7 @@ type auth struct {
 	tokenManager tokenManager
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.40.3 --name=userRepo --exported
 type userRepo interface{
 	SaveUser(ctx context.Context, email string, passHash string) (error)
 	GetUserByEmail(ctx context.Context, email string) (models.User, error)
@@ -69,7 +70,7 @@ func (a *auth) Login(ctx context.Context, email, password string) (models.TokenP
 	user, err := a.userRepo.GetUserByEmail(ctx, email)
 	if err != nil {
 		a.log.Error("failed to get user", slog.String("error", err.Error()))
-		return models.TokenPair{}, fmt.Errorf("can't login user: %w", err)
+		return models.TokenPair{}, fmt.Errorf("can't login user: %w", ErrInvalidCredentials)
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PassHash), []byte(password)); err != nil {
 		a.log.Warn(ErrInvalidCredentials.Error(), slog.String("error", err.Error()))
@@ -120,14 +121,14 @@ func (a *auth) RefreshToken(ctx context.Context, access, refresh string) (models
 		return models.TokenPair{}, fmt.Errorf("failed refresh token pair: %w", err)
 	}
 	a.log.Debug("got user data", slog.Any("user", user))
+	if time.Now().Unix() > user.ExpiresAt {
+		a.log.Info("refresh token live expired")
+		return models.TokenPair{}, fmt.Errorf("failed refresh token pair: %w", ErrValidRefresh)
+	}
 	err = bcrypt.CompareHashAndPassword([]byte(user.RefreshHash), []byte(refresh))
 	if err != nil {
 		a.log.Info("not valid refresh token", slog.String("error", err.Error()))
 		return models.TokenPair{}, fmt.Errorf("failed refresh token pair: %w", err)
-	}
-	if time.Now().Unix() > user.ExpiresAt {
-		a.log.Info("refresh token live expired")
-		return models.TokenPair{}, fmt.Errorf("failed refresh token pair: %w", ErrValidRefresh)
 	}
 	token, err := a.tokenManager.CreateJWT(user, a.tokenTTL)
 	if err != nil {

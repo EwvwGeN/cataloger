@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/storage"
 )
 
 type categoryService struct {
@@ -12,6 +14,7 @@ type categoryService struct {
 	categoryRepo categoryRepo
 }
 
+//go:generate go run github.com/vektra/mockery/v2@v2.40.3 --name=categoryRepo --exported
 type categoryRepo interface{
 	SaveCategory(ctx context.Context, category models.Category) error
 	GetCategoryByCode(ctx context.Context, catCode string) (models.Category, error)
@@ -31,6 +34,10 @@ func (cs *categoryService) AddCategory(ctx context.Context, category models.Cate
 	cs.log.Info("attempt to add category")
 	cs.log.Debug("got category", slog.Any("category", category))
 	if err := cs.categoryRepo.SaveCategory(ctx, category); err != nil {
+		if errors.Is(err, storage.ErrCategoryExist) {
+			cs.log.Error("failed to save category", slog.String("error", ErrCategoryExist.Error()))
+			return ErrCategoryExist
+		}
 		cs.log.Error("failed to save category", slog.String("error", err.Error()))
 		return err
 	}
