@@ -90,6 +90,31 @@ func main() {
 		v1.CategoryGetAll(logger, categoryService),
 		http.MethodGet,
 	)
+	hserver.RegisterHandler(
+		"/api/product/add",
+		middleware.AuthMiddleware(logger, jwtManager, v1.ProductAdd(logger, cfg.Validator, nil)),
+		http.MethodPost,
+	)
+	hserver.RegisterHandler(
+		"/api/product/{productId}/edit",
+		middleware.AuthMiddleware(logger, jwtManager, v1.ProductEdit(logger, cfg.Validator, nil)),
+		http.MethodPatch,
+	)
+	hserver.RegisterHandler(
+		"/api/product/{productId}/delete",
+		middleware.AuthMiddleware(logger, jwtManager, v1.ProductDelete(logger, nil)),
+		http.MethodDelete,
+	)
+	hserver.RegisterHandler(
+		"/api/product/{productId}",
+		v1.ProductGetOne(logger, nil),
+		http.MethodGet,
+	)
+	hserver.RegisterHandler(
+		"/api/products",
+		v1.ProductGetAll(logger, nil),
+		http.MethodGet,
+	)
 	logger.Info("loading end")
 	errCh := hserver.RunServer(mainCtx)
 	stopChecker := make(chan os.Signal, 1)

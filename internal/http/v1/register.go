@@ -24,7 +24,7 @@ func Register(logger *slog.Logger, registrator registrator, validateCfg config.V
 		req := &httpmodels.RegisterRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Error("cant decode request body")
-			http.Error(w, "error while decoidng response object", http.StatusBadRequest)
+			http.Error(w, "error while decoding request", http.StatusBadRequest)
 			return
 		}
 		log.Debug("got data from request", slog.Any("request_body", req))

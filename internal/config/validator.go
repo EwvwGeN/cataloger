@@ -12,6 +12,8 @@ type Validator struct {
 	CategoryNameValidate string `yaml:"category_name"`
 	CategoryCodeValidate string `yaml:"category_code"`
 	CategoryDescValidate string `yaml:"category_desc"`
+	ProductNameValidate string `yaml:"product_name"`
+	ProductDescValidate string `yaml:"product_desc"`
 }
 
 func (v *Validator) mustBeRegex() error {

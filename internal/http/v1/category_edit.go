@@ -31,7 +31,7 @@ func CategoryEdit(logger *slog.Logger, validCfg config.Validator, categoryEditor
 		req := &httpmodels.CategoryEditRequest{}
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 			log.Error("failed to decode request body", slog.String("error", err.Error()))
-			http.Error(w, "error while decode response object", http.StatusBadRequest)
+			http.Error(w, "error while decoding request", http.StatusBadRequest)
 			return
 		}
 		log.Debug("got data from request", slog.Any("request_body", req))
