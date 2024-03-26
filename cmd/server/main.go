@@ -48,7 +48,7 @@ func main() {
 
 	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, postgres, jwtManager)
 	categoryService := service.NewCategoryService(logger, postgres)
-	productService := service.NewProductService(logger, nil)
+	productService := service.NewProductService(logger, nil, nil)
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(

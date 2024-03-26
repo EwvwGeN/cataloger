@@ -9,19 +9,25 @@ import (
 
 //go:generate go run github.com/vektra/mockery/v2@v2.40.3 --name=productRepo --exported
 type productRepo interface {
-	SaveProduct(context.Context, models.Product) (string, error)
+	SaveProduct(context.Context, models.Product, []int) (string, error)
 	GetProductById(context.Context, string) (models.Product, error)
 	GetAllProducts(context.Context) ([]models.Product, error)
-	UpdateProductById(context.Context, string, models.ProductForPatch) (error)
+	UpdateProductById(context.Context, string, models.ProductForPatch, []int) (error)
 	DeleteProductById(context.Context, string) (error)
+}
+
+//go:generate go run github.com/vektra/mockery/v2@v2.40.3 --name=categoryCodesRepo --exported
+type categoryCodesRepo interface {
+	GetCategoriesIdByCodes(context.Context, []string) ([]int, error)
 }
 
 type productService struct {
 	log *slog.Logger
 	productRepo productRepo
+	categoryRepo categoryCodesRepo
 }
 
-func NewProductService(logger *slog.Logger, prRepo productRepo) *productService {
+func NewProductService(logger *slog.Logger, prRepo productRepo, catRepo categoryCodesRepo) *productService {
 	return &productService{
 		log: logger.With(slog.String("service", "product")),
 		productRepo: prRepo,
@@ -29,9 +35,20 @@ func NewProductService(logger *slog.Logger, prRepo productRepo) *productService 
 }
 
 func (ps *productService) AddProduct(ctx context.Context, product models.Product) (string, error) {
+	var (
+		categoriesId []int
+		err error
+	)
 	ps.log.Info("attempt to add product")
 	ps.log.Debug("got product", slog.Any("product", product))
-	pId, err := ps.productRepo.SaveProduct(ctx, product)
+	if product.CategoryСodes != nil {
+		categoriesId, err = ps.categoryRepo.GetCategoriesIdByCodes(ctx, product.CategoryСodes)
+	}
+	if err != nil {
+		ps.log.Error("failed to get categories id", slog.String("error", err.Error()))
+		return "", err
+	}
+	pId, err := ps.productRepo.SaveProduct(ctx, product, categoriesId)
 	if err != nil {
 		ps.log.Error("failed to save product", slog.String("error", err.Error()))
 		return "", err
@@ -61,9 +78,20 @@ func (ps *productService) GetAllProduct(ctx context.Context) ([]models.Product, 
 }
 
 func (ps *productService) EditProduct(ctx context.Context, prodId string, prodUpdateData models.ProductForPatch) (error) {
+	var (
+		categoriesId []int
+		err error
+	)
 	ps.log.Info("attempt to update product")
 	ps.log.Debug("got product data", slog.Any("product", prodUpdateData))
-	if err := ps.productRepo.UpdateProductById(ctx, prodId, prodUpdateData); err != nil {
+	if prodUpdateData.CategoryСodes != nil {
+		categoriesId, err = ps.categoryRepo.GetCategoriesIdByCodes(ctx, prodUpdateData.CategoryСodes)
+	}
+	if err != nil {
+		ps.log.Error("failed to get categories id", slog.String("error", err.Error()))
+		return err
+	}
+	if err := ps.productRepo.UpdateProductById(ctx, prodId, prodUpdateData, categoriesId); err != nil {
 		ps.log.Error("failed to update product", slog.String("error", err.Error()))
 		return err
 	}
