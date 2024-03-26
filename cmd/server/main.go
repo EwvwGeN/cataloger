@@ -48,6 +48,7 @@ func main() {
 
 	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, postgres, jwtManager)
 	categoryService := service.NewCategoryService(logger, postgres)
+	productService := service.NewProductService(logger, nil)
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(
@@ -92,27 +93,27 @@ func main() {
 	)
 	hserver.RegisterHandler(
 		"/api/product/add",
-		middleware.AuthMiddleware(logger, jwtManager, v1.ProductAdd(logger, cfg.Validator, nil)),
+		middleware.AuthMiddleware(logger, jwtManager, v1.ProductAdd(logger, cfg.Validator, productService)),
 		http.MethodPost,
 	)
 	hserver.RegisterHandler(
 		"/api/product/{productId}/edit",
-		middleware.AuthMiddleware(logger, jwtManager, v1.ProductEdit(logger, cfg.Validator, nil)),
+		middleware.AuthMiddleware(logger, jwtManager, v1.ProductEdit(logger, cfg.Validator, productService)),
 		http.MethodPatch,
 	)
 	hserver.RegisterHandler(
 		"/api/product/{productId}/delete",
-		middleware.AuthMiddleware(logger, jwtManager, v1.ProductDelete(logger, nil)),
+		middleware.AuthMiddleware(logger, jwtManager, v1.ProductDelete(logger, productService)),
 		http.MethodDelete,
 	)
 	hserver.RegisterHandler(
 		"/api/product/{productId}",
-		v1.ProductGetOne(logger, nil),
+		v1.ProductGetOne(logger, productService),
 		http.MethodGet,
 	)
 	hserver.RegisterHandler(
 		"/api/products",
-		v1.ProductGetAll(logger, nil),
+		v1.ProductGetAll(logger, productService),
 		http.MethodGet,
 	)
 	logger.Info("loading end")
