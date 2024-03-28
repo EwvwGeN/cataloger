@@ -45,6 +45,21 @@ WHERE "code"=$1;`,
 	return category, nil
 }
 
+func (pp *postgresProvider) GetCategoriesIdByCodes(ctx context.Context, catCodes []string) ([]int, error) {
+	row:= pp.dbConn.QueryRow(ctx, fmt.Sprintf(`
+SELECT array_agg(category_id)
+FROM "%s"
+WHERE code = ANY ($1)`,
+	pp.cfg.CatogoryTable),
+	catCodes)
+	var outCategoriesId []int
+	err := row.Scan(&outCategoriesId)
+	if err != nil {
+		return nil, ErrQuery
+	}
+	return outCategoriesId, nil
+}
+
 func (pp *postgresProvider) GetAllCategories(ctx context.Context) ([]models.Category, error) {
 	rows, err := pp.dbConn.Query(ctx, fmt.Sprintf(`
 SELECT "name", "code", "description"

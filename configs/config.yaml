@@ -12,6 +12,7 @@ postgres:
   db_name: InHouseAd_assignment
   db_tbl_user: test-user
   db_tbl_category: test-categories
+  db_tbl_product: test-product
 refresh_ttl: 1h
 token_ttl: 240h
 secret_key: test-key

@@ -31,6 +31,7 @@ func NewProductService(logger *slog.Logger, prRepo productRepo, catRepo category
 	return &productService{
 		log: logger.With(slog.String("service", "product")),
 		productRepo: prRepo,
+		categoryRepo: catRepo,
 	}
 }
 
@@ -42,6 +43,7 @@ func (ps *productService) AddProduct(ctx context.Context, product models.Product
 	ps.log.Info("attempt to add product")
 	ps.log.Debug("got product", slog.Any("product", product))
 	if product.CategoryСodes != nil {
+		//TODO: handling case when any values from product.codes array does not exist in database
 		categoriesId, err = ps.categoryRepo.GetCategoriesIdByCodes(ctx, product.CategoryСodes)
 	}
 	if err != nil {

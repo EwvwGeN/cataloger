@@ -9,4 +9,5 @@ type PostgresConfig struct {
 	Database        string `yaml:"db_name"`
 	UserTable       string `yaml:"db_tbl_user"`
 	CatogoryTable   string `yaml:"db_tbl_category"`
+	ProductTable    string `yaml:"db_tbl_product"`
 }

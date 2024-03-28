@@ -48,7 +48,7 @@ func main() {
 
 	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, postgres, jwtManager)
 	categoryService := service.NewCategoryService(logger, postgres)
-	productService := service.NewProductService(logger, nil, nil)
+	productService := service.NewProductService(logger, postgres, postgres)
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(
@@ -116,6 +116,7 @@ func main() {
 		v1.ProductGetAll(logger, productService),
 		http.MethodGet,
 	)
+	//TODO: add handler for products with category
 	logger.Info("loading end")
 	errCh := hserver.RunServer(mainCtx)
 	stopChecker := make(chan os.Signal, 1)
