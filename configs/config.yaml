@@ -13,6 +13,7 @@ postgres:
   db_tbl_user: test-user
   db_tbl_category: test-categories
   db_tbl_product: test-product
+  db_tbl_product_category: test-product_category
 refresh_ttl: 1h
 token_ttl: 240h
 secret_key: test-key

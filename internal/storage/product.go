@@ -8,38 +8,62 @@ import (
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
 	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
 )
 
-func (pp *postgresProvider) SaveProduct(ctx context.Context, product models.Product, catCodes []int) (string, error) {
+func (pp *postgresProvider) SaveProduct(ctx context.Context, product models.Product, catIds []int) (string, error) {
+	transaction, err := pp.dbConn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return "", ErrStartTx
+	}
 	var id int
-	err := pp.dbConn.QueryRow(ctx, fmt.Sprintf(`
-INSERT INTO "%s" (name, description, category_ids)
-VALUES($1,$2,$3)
+	err = transaction.QueryRow(ctx, fmt.Sprintf(`
+INSERT INTO "%s" (name, description)
+VALUES($1,$2)
 RETURNING product_id;`,
 	pp.cfg.ProductTable),
 	product.Name,
-	product.Description,
-	catCodes).Scan(&id)
-	if err == nil {
-		return strconv.Itoa(id), nil
+	product.Description).Scan(&id)
+	if err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return "", ErrRollbackTx
+		}
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) {
+			if pgErr.Code == "23505" {
+				return "", ErrProductExist
+			}
+		}
+		return "", ErrQuery
 	}
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		if pgErr.Code == "23505" {
-			return "", ErrProductExist
+	for _, сid := range catIds {
+		_, err = transaction.Exec(ctx, fmt.Sprintf(`
+INSERT INTO "%s" (product_id, category_id)
+VALUES ($1, $2)`,
+		pp.cfg.ProductCategoryTable),
+		id,
+		сid)
+		if err != nil {
+			transaction.Rollback(ctx)
+			return "", ErrQuery
 		}
 	}
-	return "", ErrQuery
+	if err := transaction.Commit(ctx); err != nil {
+		return "", ErrCommitTx
+	}
+	return strconv.Itoa(id), nil
 }
 
 func (pp *postgresProvider) GetProductById(ctx context.Context, prodId string) (models.Product, error) {
 	row := pp.dbConn.QueryRow(ctx, fmt.Sprintf(`
 SELECT p.name, p.description, array_agg(c.code) as category_codes
 FROM "%s" as p
-LEFT JOIN "%s" as c ON c.category_id = ANY (p.category_ids)
+LEFT JOIN "%s" as pc ON pc.product_id = $1
+Left JOIN "%s" as c ON c.category_id = pc.category_id
 WHERE p.product_id = $1
 GROUP BY p.product_id`,
 	pp.cfg.ProductTable,
+	pp.cfg.ProductCategoryTable,
 	pp.cfg.CatogoryTable),
 	prodId)
 	var (
@@ -54,11 +78,17 @@ GROUP BY p.product_id`,
 
 func (pp *postgresProvider) GetAllProducts(ctx context.Context) ([]models.Product, error) {
 	rows, err := pp.dbConn.Query(ctx, fmt.Sprintf(`
-SELECT p.name, p.description, array_agg(c.code) as category_codes
+SELECT p.name, p.description,
+CASE 
+	WHEN COUNT(pc.category_id) = 0 THEN NULL 
+	ELSE array_agg(c.code) 
+END as category_codes
 FROM "%s" as p
-LEFT JOIN "%s" as c ON c.category_id = ANY (p.category_ids)
+LEFT JOIN "%s" as pc ON pc.product_id = p.product_id
+Left JOIN "%s" as c ON c.category_id = pc.category_id
 GROUP BY p.product_id`,
 	pp.cfg.ProductTable,
+	pp.cfg.ProductCategoryTable,
 	pp.cfg.CatogoryTable))
 	if err != nil {
 		return nil, ErrQuery
@@ -79,10 +109,12 @@ func (pp *postgresProvider) GetProductsByCategory(ctx context.Context, catCode s
 	rows, err := pp.dbConn.Query(ctx, fmt.Sprintf(`
 SELECT p.name, p.description, array_agg(c.code) as category_codes
 FROM "%s" as p
-LEFT JOIN "%s" as c ON c.category_id = ANY (p.category_ids)
+LEFT JOIN "%s" as pc ON pc.product_id = p.product_id
+Left JOIN "%s" as c ON c.category_id = pc.category_id
 GROUP BY p.product_id
 HAVING $1 = ANY (array_agg(c.code));`,
 	pp.cfg.ProductTable,
+	pp.cfg.ProductCategoryTable,
 	pp.cfg.CatogoryTable),
 	catCode)
 	if err != nil {
@@ -99,38 +131,97 @@ HAVING $1 = ANY (array_agg(c.code));`,
 	return outProducts, nil
 }
 
-func (pp *postgresProvider) UpdateProductById(ctx context.Context, id string, newPorductdata models.ProductForPatch, catIds []int) error {
-	preparedQuery := fmt.Sprintf("UPDATE \"%s\" SET ", pp.cfg.ProductTable)
-	usedFields := 0
-	usedData := make([]interface{}, 0)
-	if newPorductdata.Name != nil {
-		preparedQuery += fmt.Sprintf("\"name\" = $%d, ", usedFields+1)
-		usedFields++
-		usedData = append(usedData, *newPorductdata.Name)
-	}
-	if newPorductdata.Description != nil {
-		preparedQuery += fmt.Sprintf("\"description\" = $%d, ", usedFields+1)
-		usedFields++
-		usedData = append(usedData, *newPorductdata.Description)
-	}
-	if catIds != nil {
-		preparedQuery += fmt.Sprintf("\"category_ids\" = $%d, ", usedFields+1)
-		usedFields++
-		usedData = append(usedData, catIds)
-	}
-	preparedQuery = preparedQuery[:len(preparedQuery)-2]
-	usedData = append(usedData, id)
-	_, err := pp.dbConn.Exec(ctx, fmt.Sprintf("%s WHERE \"product_id\" = $%d", preparedQuery, usedFields+1), usedData...)
+func (pp *postgresProvider) UpdateProductById(ctx context.Context, prodId string, newPorductdata models.ProductForPatch, catIds []int) error {
+	transaction, err := pp.dbConn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
+		return ErrStartTx
+	}
+	//TODO: rewritre it, hotfix
+	if newPorductdata.Name != nil || newPorductdata.Description != nil {
+		preparedQuery := fmt.Sprintf("UPDATE \"%s\" SET ", pp.cfg.ProductTable)
+		usedFields := 0
+		usedData := make([]interface{}, 0)
+		if newPorductdata.Name != nil {
+			preparedQuery += fmt.Sprintf("\"name\" = $%d, ", usedFields+1)
+			usedFields++
+			usedData = append(usedData, *newPorductdata.Name)
+		}
+		if newPorductdata.Description != nil {
+			preparedQuery += fmt.Sprintf("\"description\" = $%d, ", usedFields+1)
+			usedFields++
+			usedData = append(usedData, *newPorductdata.Description)
+		}
+		preparedQuery = preparedQuery[:len(preparedQuery)-2]
+		usedData = append(usedData, prodId)
+		_, err = transaction.Exec(ctx, fmt.Sprintf("%s WHERE \"product_id\" = $%d", preparedQuery, usedFields+1), usedData...)
+		if err != nil {
+			if err := transaction.Rollback(ctx); err != nil {
+				return ErrRollbackTx
+			}
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) {
+				if pgErr.Code == "23505" {
+					return ErrProductExist
+				}
+			}
+			return ErrQuery
+		}
+	}
+	
+	if catIds == nil {
+		if err := transaction.Commit(ctx); err != nil {
+			return ErrCommitTx
+		}
+		return nil
+	}
+
+	for _, cId := range catIds {
+		_, err = transaction.Exec(ctx, fmt.Sprintf(`
+INSERT INTO "%s" (product_id, category_id)
+VALUES ($1, $2)  ON CONFLICT (product_id, category_id) DO NOTHING;`,
+		pp.cfg.ProductCategoryTable),
+		prodId,
+		cId)
+		if err != nil {
+			if err := transaction.Rollback(ctx); err != nil {
+				return ErrRollbackTx
+			}
+			return ErrQuery
+		}
+	}
+	
+	_, err = transaction.Exec(ctx, fmt.Sprintf(`
+DELETE FROM "%s"
+WHERE product_id = $1 AND category_id <> ANY ($2);`,
+	pp.cfg.ProductCategoryTable),
+	prodId,
+	catIds)
+	if err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return ErrRollbackTx
+		}
 		return ErrQuery
+	}
+	if err := transaction.Commit(ctx); err != nil {
+		return ErrCommitTx
 	}
 	return nil
 }
 
 func (pp *postgresProvider) DeleteProductById(ctx context.Context, id string) error {
-	_, err := pp.dbConn.Exec(ctx, fmt.Sprintf("DELETE FROM \"%s\" WHERE \"product_id\" = $1", pp.cfg.ProductTable), id)
+	transaction, err := pp.dbConn.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
+		return ErrStartTx
+	}
+	_, err = transaction.Exec(ctx, fmt.Sprintf("DELETE FROM \"%s\" WHERE \"product_id\" = $1", pp.cfg.ProductTable), id)
+	if err != nil {
+		if err := transaction.Rollback(ctx); err != nil {
+			return ErrRollbackTx
+		}
 		return ErrQuery
+	}
+	if err := transaction.Commit(ctx); err != nil {
+		return ErrCommitTx
 	}
 	return nil
 }

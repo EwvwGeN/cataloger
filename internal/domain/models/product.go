@@ -9,5 +9,5 @@ type Product struct {
 type ProductForPatch struct {
 	Name          *string  `json:"name"`
 	Description   *string  `json:"description"`
-	CategoryСodes []string `json:"category_codes"`
+	CategoryСodes []string `json:"category_codes,omitempty"`
 }
