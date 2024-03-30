@@ -3,12 +3,14 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/validator"
 	"github.com/gorilla/mux"
 )
@@ -51,6 +53,11 @@ func ProductEdit(logger *slog.Logger, validCfg config.Validator, productEditor p
 		}
 		err := productEditor.EditProduct(context.Background(), prodId, req.ProductNewData)
 		if err != nil {
+			if errors.Is(err, service.ErrProductExist) {
+				log.Error("failed to edit category", slog.String("error", service.ErrProductExist.Error()))
+				http.Error(w, "error while edditing category: product with this name already exist", http.StatusBadRequest)
+				return
+			}
 			log.Error("error while editing product", slog.Any("product", req.ProductNewData))
 			http.Error(w, "failed to edit product", http.StatusBadRequest)
 			return

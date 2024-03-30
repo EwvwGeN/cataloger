@@ -104,16 +104,28 @@ func (pp *postgresProvider) UpdateCategoryByCode(ctx context.Context, catCode st
 	preparedQuery = preparedQuery[:len(preparedQuery)-2]
 	usedData = append(usedData, catCode)
 	_, err := pp.dbConn.Exec(ctx, fmt.Sprintf("%s WHERE \"code\" = $%d", preparedQuery, usedFields+1), usedData...)
-	if err != nil {
-		return ErrQuery
+	if err == nil {
+		return nil
 	}
-	return nil
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == "23505" {
+			return ErrCategoryExist
+		}
+	}
+	return ErrQuery
 }
 
 func (pp *postgresProvider) DeleteCategoryBycode(ctx context.Context, catCode string) error {
 	_, err := pp.dbConn.Exec(ctx, fmt.Sprintf("DELETE FROM \"%s\" WHERE \"code\" = $1", pp.cfg.CatogoryTable), catCode)
-	if err != nil {
-		return ErrQuery
+	if err == nil {
+		return nil
+	}
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if pgErr.Code == "23503" {
+			return ErrCategoryUsed
+		}
 	}
 	return nil
 }

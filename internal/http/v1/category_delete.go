@@ -2,9 +2,11 @@ package v1
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"net/http"
 
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 	"github.com/gorilla/mux"
 )
 
@@ -24,6 +26,11 @@ func CategoryDelete(logger *slog.Logger, categoryDeleter categoryDeleter) http.H
 		}
 		err := categoryDeleter.DeleteCategory(context.Background(), catCode)
 		if err != nil {
+			if errors.Is(err, service.ErrCategoryExist) {
+				log.Error("failed to delete category", slog.String("error", service.ErrCategoryExist.Error()))
+				http.Error(w, "error while deleting category: category with this code is in use", http.StatusBadRequest)
+				return
+			}
 			log.Error("failed to delete category", slog.String("error", err.Error()))
 			http.Error(w, "error while deleting category", http.StatusBadRequest)
 			return

@@ -79,6 +79,10 @@ func (cs *categoryService) DeleteCategory(ctx context.Context, catCode string) (
 	cs.log.Info("attempt to delete category")
 	cs.log.Debug("got category code", slog.Any("code", catCode))
 	if err := cs.categoryRepo.DeleteCategoryBycode(ctx, catCode); err != nil {
+		if errors.Is(err, storage.ErrCategoryUsed) {
+			cs.log.Error("failed to save category", slog.String("error", ErrCategoryInUse.Error()))
+			return ErrCategoryInUse
+		}
 		cs.log.Error("failed to delete category", slog.String("error", err.Error()))
 		return err
 	}

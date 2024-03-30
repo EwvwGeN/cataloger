@@ -3,12 +3,14 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/validator"
 )
 
@@ -39,6 +41,11 @@ func ProductAdd(logger *slog.Logger, validCfg config.Validator, productAdder pro
 		}
 		prodId, err := productAdder.AddProduct(context.Background(), req.Product)
 		if err != nil {
+			if errors.Is(err, service.ErrProductExist) {
+				log.Error("failed to add category", slog.String("error", service.ErrProductExist.Error()))
+				http.Error(w, "error while adding category: product with this name already exist", http.StatusBadRequest)
+				return
+			}
 			log.Error("error while adding product", slog.Any("product", req.Product))
 			http.Error(w, "failed to add product", http.StatusBadRequest)
 			return

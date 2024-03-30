@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/storage"
 )
 
 //go:generate go run github.com/vektra/mockery/v2@v2.40.3 --name=productRepo --exported
@@ -52,6 +54,10 @@ func (ps *productService) AddProduct(ctx context.Context, product models.Product
 	}
 	pId, err := ps.productRepo.SaveProduct(ctx, product, categoriesId)
 	if err != nil {
+		if errors.Is(err, storage.ErrProductExist) {
+			ps.log.Error("failed to save category", slog.String("error", ErrProductExist.Error()))
+			return "", ErrProductExist
+		}
 		ps.log.Error("failed to save product", slog.String("error", err.Error()))
 		return "", err
 	}
@@ -94,6 +100,10 @@ func (ps *productService) EditProduct(ctx context.Context, prodId string, prodUp
 		return err
 	}
 	if err := ps.productRepo.UpdateProductById(ctx, prodId, prodUpdateData, categoriesId); err != nil {
+		if errors.Is(err, storage.ErrProductExist) {
+			ps.log.Error("failed to save category", slog.String("error", ErrProductExist.Error()))
+			return ErrProductExist
+		}
 		ps.log.Error("failed to update product", slog.String("error", err.Error()))
 		return err
 	}
