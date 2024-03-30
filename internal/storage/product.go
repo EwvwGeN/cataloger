@@ -127,6 +127,7 @@ HAVING $1 = ANY (array_agg(c.code));`,
 		if err != nil {
 			return nil, ErrQuery
 		}
+		outProducts = append(outProducts, product)
 	}
 	return outProducts, nil
 }

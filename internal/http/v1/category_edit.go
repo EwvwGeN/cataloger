@@ -60,8 +60,8 @@ func CategoryEdit(logger *slog.Logger, validCfg config.Validator, categoryEditor
 		err := categoryEditor.EditCategory(context.Background(), catCode, req.CategoryNewData)
 		if err != nil {
 			if errors.Is(err, service.ErrCategoryExist) {
-				log.Error("failed to add category", slog.String("error", service.ErrCategoryExist.Error()))
-				http.Error(w, "error while adding category: category with this code already exist", http.StatusBadRequest)
+				log.Error("failed to edit category", slog.String("error", service.ErrCategoryExist.Error()))
+				http.Error(w, "error while edditing category: category with this code already exist", http.StatusBadRequest)
 				return
 			}
 			log.Error("failed to edit category", slog.String("error", err.Error()))

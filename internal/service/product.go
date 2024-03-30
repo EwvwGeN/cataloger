@@ -14,6 +14,7 @@ type productRepo interface {
 	SaveProduct(context.Context, models.Product, []int) (string, error)
 	GetProductById(context.Context, string) (models.Product, error)
 	GetAllProducts(context.Context) ([]models.Product, error)
+	GetProductsByCategory(ctx context.Context, catCode string) ([]models.Product, error)
 	UpdateProductById(context.Context, string, models.ProductForPatch, []int) (error)
 	DeleteProductById(context.Context, string) (error)
 }
@@ -78,6 +79,16 @@ func (ps *productService) GetOneProduct(ctx context.Context, prodId string) (mod
 func (ps *productService) GetAllProduct(ctx context.Context) ([]models.Product, error) {
 	ps.log.Info("attempt to get all products")
 	products, err := ps.productRepo.GetAllProducts(ctx)
+	if err != nil {
+		ps.log.Error("failed to get products", slog.String("error", err.Error()))
+		return nil, err
+	}
+	return products, nil
+}
+
+func (ps *productService) GetAllProductsByCategory(ctx context.Context, catCode string) ([]models.Product, error) {
+	ps.log.Info("attempt to get all products by category code")
+	products, err := ps.productRepo.GetProductsByCategory(ctx, catCode)
 	if err != nil {
 		ps.log.Error("failed to get products", slog.String("error", err.Error()))
 		return nil, err

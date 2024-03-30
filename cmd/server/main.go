@@ -116,6 +116,11 @@ func main() {
 		v1.ProductGetAll(logger, productService),
 		http.MethodGet,
 	)
+	hserver.RegisterHandler(
+		"/api/products/{catCode}",
+		v1.ProductGetAllByCategory(logger, productService),
+		http.MethodGet,
+	)
 	//TODO: add handler for products with category
 	logger.Info("loading end")
 	errCh := hserver.RunServer(mainCtx)
