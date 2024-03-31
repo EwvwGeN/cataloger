@@ -53,6 +53,10 @@ func (ps *productService) AddProduct(ctx context.Context, product models.Product
 		ps.log.Error("failed to get categories id", slog.String("error", err.Error()))
 		return "", err
 	}
+	if len(product.CategoryСodes) != len(categoriesId) {
+		ps.log.Error("failed to get categories id", slog.String("error", ErrCategoriesCodes.Error()))
+		return "", ErrCategoriesCodes
+	}
 	pId, err := ps.productRepo.SaveProduct(ctx, product, categoriesId)
 	if err != nil {
 		if errors.Is(err, storage.ErrProductExist) {
