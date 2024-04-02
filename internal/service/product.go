@@ -114,6 +114,10 @@ func (ps *productService) EditProduct(ctx context.Context, prodId string, prodUp
 		ps.log.Error("failed to get categories id", slog.String("error", err.Error()))
 		return err
 	}
+	if len(prodUpdateData.CategoryСodes) != len(categoriesId) {
+		ps.log.Error("failed to get categories id", slog.String("error", ErrCategoriesCodes.Error()))
+		return ErrCategoriesCodes
+	}
 	if err := ps.productRepo.UpdateProductById(ctx, prodId, prodUpdateData, categoriesId); err != nil {
 		if errors.Is(err, storage.ErrProductExist) {
 			ps.log.Error("failed to save category", slog.String("error", ErrProductExist.Error()))
