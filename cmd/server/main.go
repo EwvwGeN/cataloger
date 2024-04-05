@@ -9,8 +9,11 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/app"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/background"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/background/parser"
 	c "github.com/EwvwGeN/InHouseAd_assignment/internal/config"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/http/middleware"
 	v1 "github.com/EwvwGeN/InHouseAd_assignment/internal/http/v1"
@@ -49,6 +52,20 @@ func main() {
 	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, postgres, jwtManager)
 	categoryService := service.NewCategoryService(logger, postgres)
 	productService := service.NewProductService(logger, postgres, postgres)
+
+	go func ()  {
+DATACOLLECTORLOOP:
+		for {
+			select {
+			case <- mainCtx.Done():
+				break DATACOLLECTORLOOP
+			case <- time.After(cfg.DataCollectTime):
+				background.DataCollector(logger, cfg.Validator, parser.ParseFromEmojihub, 
+					background.GetProductAdder(logger, postgres, postgres),
+				)(mainCtx, cfg.DataCollectLink)
+			}
+		}
+	}()
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(
@@ -121,7 +138,6 @@ func main() {
 		v1.ProductGetAllByCategory(logger, productService),
 		http.MethodGet,
 	)
-	//TODO: add handler for products with category
 	logger.Info("loading end")
 	errCh := hserver.RunServer(mainCtx)
 	stopChecker := make(chan os.Signal, 1)

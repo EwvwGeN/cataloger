@@ -7,6 +7,7 @@ import (
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
 	"github.com/jackc/pgconn"
+	"github.com/jackc/pgx/v4"
 )
 
 func (pp *postgresProvider) SaveCategory(ctx context.Context, category models.Category) error {
@@ -26,6 +27,43 @@ VALUES($1,$2,$3);`,
 		}
 	}
 	return ErrQuery
+}
+
+func (pp *postgresProvider) InserOrGetCategiriesId(ctx context.Context, categories []models.Category) (map[string]int, error) {
+	transaction, err := pp.dbConn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, ErrStartTx
+	}
+	categoriesMap := make(map[string]int, len(categories))
+	for _, catg := range categories {
+		var id int
+		err = transaction.QueryRow(ctx, fmt.Sprintf(`
+WITH ins AS(
+	INSERT INTO "%s" (name, code, description)
+			VALUES ($1, $2, $3) 
+	ON CONFLICT ("code") DO NOTHING
+	RETURNING category_id
+)
+SELECT category_id FROM ins
+UNION
+	SELECT category_id FROM "%s" WHERE code = $2;`,
+		pp.cfg.CatogoryTable, pp.cfg.CatogoryTable),
+		catg.Name,
+		catg.Code,
+		catg.Description).
+		Scan(&id)
+		if err != nil {
+			if err := transaction.Rollback(ctx); err != nil {
+				return nil, ErrRollbackTx
+			}
+			return nil, ErrQuery
+		}
+		categoriesMap[catg.Code] = id
+	}
+	if err := transaction.Commit(ctx); err != nil {
+		return nil, ErrCommitTx
+	}
+	return categoriesMap, nil
 }
 
 func (pp *postgresProvider) GetCategoryByCode(ctx context.Context, catCode string) (models.Category, error) {

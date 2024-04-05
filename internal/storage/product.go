@@ -54,6 +54,44 @@ VALUES ($1, $2)`,
 	return strconv.Itoa(id), nil
 }
 
+func (pp *postgresProvider) SaveProducts(ctx context.Context, products []models.Product, catsIds [][]int) (error) {
+	transaction, err := pp.dbConn.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return ErrStartTx
+	}
+	for idx, product := range products {
+		var prodId int
+		err = transaction.QueryRow(ctx, fmt.Sprintf(`
+INSERT INTO "%s" (name, description)
+VALUES($1,$2)
+ON CONFLICT (name) DO NOTHING
+RETURNING product_id;`,
+			pp.cfg.ProductTable),
+			product.Name,
+			product.Description).Scan(&prodId)
+		if err != nil {
+			continue
+		}
+
+		for _, сid := range catsIds[idx] {
+			_, err = transaction.Exec(ctx, fmt.Sprintf(`
+INSERT INTO "%s" (product_id, category_id)
+VALUES ($1, $2)
+ON CONFLICT (product_id, category_id) DO NOTHING;`,
+			pp.cfg.ProductCategoryTable),
+			prodId,
+			сid)
+			if err != nil {
+				continue
+			}
+		}
+	}
+	if err := transaction.Commit(ctx); err != nil {
+		return ErrCommitTx
+	}
+	return nil
+}
+
 func (pp *postgresProvider) GetProductById(ctx context.Context, prodId string) (models.Product, error) {
 	row := pp.dbConn.QueryRow(ctx, fmt.Sprintf(`
 SELECT p.name, p.description, array_agg(c.code) as category_codes
