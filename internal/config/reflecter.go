@@ -75,7 +75,6 @@ func loadEnv(cfg *Config) error {
 		} else {
 			tag = filedTag
 		}
-		fmt.Println(tag)
 		if err := setValue(nestedField, getEnv(tag)); err != nil {
 			return err
 		}

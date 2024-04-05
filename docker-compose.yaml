@@ -3,13 +3,12 @@ services:
 
   postgres:
     image: postgres:13.3
+    env_file:
+      .env
     environment:
-      POSTGRES_DB: "InHouseAd_assignment"
-      POSTGRES_USER: "user"
-      POSTGRES_PASSWORD: "password"
-      POSTGRES_DB_TBL_USER: "test-user"
-      POSTGRES_DB_TBL_CATEGORY: "test-categories"
-      POSTGRES_DB_TBL_PRODUCT: "test-product"
+      POSTGRES_DB: ${POSTGRES_DB_NAME}
+      POSTGRES_USER: ${POSTGRES_DB_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_DB_PASS}
     volumes:
       - ./storage/init/:/docker-entrypoint-initdb.d/
       - pg-data:/var/lib/postgresql/data
@@ -17,6 +16,11 @@ services:
       - "5432:5432"
     networks:
       - assignment
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
 
   pgadmin:
     image: dpage/pgadmin4:7.2
@@ -28,6 +32,19 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     ports:
       - "5050:80"
+    networks:
+      - assignment
+  server:
+    env_file:
+      .env
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    ports:
+      - 9999:${HTTP_PORT}/tcp
+    depends_on:
+      postgres:
+        condition: "service_healthy"
     networks:
       - assignment
 
