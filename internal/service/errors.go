@@ -8,6 +8,7 @@ var (
 	ErrCategoriesCodes = errors.New("categories with some codes not exists")
 	ErrCategoryInUse = errors.New("category with this code in use")
 	ErrProductExist = errors.New("product with this name already exist")
+	ErrProductNotFound = errors.New("product with this id not found")
 	ErrInvalidCredentials = errors.New("invalid credential")
 	ErrValidRefresh = errors.New("not valid refresh token")
 )

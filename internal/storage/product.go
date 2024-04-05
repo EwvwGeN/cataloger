@@ -94,7 +94,7 @@ ON CONFLICT (product_id, category_id) DO NOTHING;`,
 
 func (pp *postgresProvider) GetProductById(ctx context.Context, prodId string) (models.Product, error) {
 	row := pp.dbConn.QueryRow(ctx, fmt.Sprintf(`
-SELECT p.name, p.description, array_agg(c.code) as category_codes
+SELECT p.product_id, p.name, p.description, array_agg(c.code) as category_codes
 FROM "%s" as p
 LEFT JOIN "%s" as pc ON pc.product_id = $1
 Left JOIN "%s" as c ON c.category_id = pc.category_id
@@ -107,8 +107,11 @@ GROUP BY p.product_id`,
 	var (
 		product models.Product
 	)
-	err := row.Scan(&product.Name, &product.Description, &product.CategoryСodes)
+	err := row.Scan(&product.Id, &product.Name, &product.Description, &product.CategoryСodes)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return models.Product{}, ErrProductNotFound
+		}
 		return models.Product{}, ErrQuery
 	}
 	return product, nil
@@ -116,7 +119,7 @@ GROUP BY p.product_id`,
 
 func (pp *postgresProvider) GetAllProducts(ctx context.Context) ([]models.Product, error) {
 	rows, err := pp.dbConn.Query(ctx, fmt.Sprintf(`
-SELECT p.name, p.description,
+SELECT p.product_id, p.name, p.description,
 CASE 
 	WHEN COUNT(pc.category_id) = 0 THEN NULL 
 	ELSE array_agg(c.code) 
@@ -134,7 +137,7 @@ GROUP BY p.product_id`,
 	var outProducts []models.Product
 	for rows.Next() {
 		var product models.Product
-		err := rows.Scan(&product.Name, &product.Description, &product.CategoryСodes)
+		err := rows.Scan(&product.Id, &product.Name, &product.Description, &product.CategoryСodes)
 		if err != nil {
 			return nil, ErrQuery
 		}
@@ -145,7 +148,7 @@ GROUP BY p.product_id`,
 
 func (pp *postgresProvider) GetProductsByCategory(ctx context.Context, catCode string) ([]models.Product, error) {
 	rows, err := pp.dbConn.Query(ctx, fmt.Sprintf(`
-SELECT p.name, p.description, array_agg(c.code) as category_codes
+SELECT p.product_id, p.name, p.description, array_agg(c.code) as category_codes
 FROM "%s" as p
 LEFT JOIN "%s" as pc ON pc.product_id = p.product_id
 Left JOIN "%s" as c ON c.category_id = pc.category_id
@@ -161,7 +164,7 @@ HAVING $1 = ANY (array_agg(c.code));`,
 	var outProducts []models.Product
 	for rows.Next() {
 		var product models.Product
-		err := rows.Scan(&product.Name, &product.Description, &product.CategoryСodes)
+		err := rows.Scan(&product.Id, &product.Name, &product.Description, &product.CategoryСodes)
 		if err != nil {
 			return nil, ErrQuery
 		}

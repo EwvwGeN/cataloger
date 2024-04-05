@@ -7,6 +7,7 @@ var (
 	ErrCategoryExist = errors.New("category with this code already exist")
 	ErrCategoryUsed = errors.New("category used")
 	ErrProductExist = errors.New("product with this name already exist")
+	ErrProductNotFound = errors.New("product with this id not found")
 	ErrStartTx = errors.New("failed to begin transaction")
 	ErrCommitTx = errors.New("error while commiting transaction")
 	ErrRollbackTx = errors.New("failed to rollback transaction")

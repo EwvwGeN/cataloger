@@ -74,6 +74,10 @@ func (ps *productService) GetOneProduct(ctx context.Context, prodId string) (mod
 	ps.log.Debug("got product id", slog.String("product_id", prodId))
 	product, err := ps.productRepo.GetProductById(ctx, prodId)
 	if err != nil {
+		if errors.Is(err, storage.ErrProductNotFound) {
+			ps.log.Warn("product not found", slog.String("prodcut_id", prodId))
+			return product, ErrProductNotFound
+		}
 		ps.log.Error("failed to get product by code", slog.String("product_id", prodId), slog.String("error", err.Error()))
 		return models.Product{}, err
 	}

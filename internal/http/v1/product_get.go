@@ -3,11 +3,13 @@ package v1
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
 	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
 	"github.com/gorilla/mux"
 )
 
@@ -24,7 +26,7 @@ type productAllByCatCodeGetter interface {
 }
 
 func ProductGetOne(logger *slog.Logger, productOneGetter productOneGetter) http.HandlerFunc {
-	log := logger.With(slog.String("handler", "product_delete"))
+	log := logger.With(slog.String("handler", "product_get_one"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Info("attempt to get one product")
 		prodId, ok := mux.Vars(r)["productId"]
@@ -35,6 +37,11 @@ func ProductGetOne(logger *slog.Logger, productOneGetter productOneGetter) http.
 		}
 		product, err := productOneGetter.GetOneProduct(context.Background(), prodId)
 		if err != nil {
+			if errors.Is(err, service.ErrProductNotFound) {
+				log.Warn("failed to get product with this id", slog.String("error", err.Error()))
+				http.Error(w, "product with this id not found", http.StatusBadRequest)
+				return
+			}
 			log.Error("failed to get product", slog.String("error", err.Error()))
 			http.Error(w, "error while getting product", http.StatusBadRequest)
 			return
@@ -55,7 +62,7 @@ func ProductGetOne(logger *slog.Logger, productOneGetter productOneGetter) http.
 }
 
 func ProductGetAll(logger *slog.Logger, productAllGetter productAllGetter) http.HandlerFunc {
-	log := logger.With(slog.String("handler", "product_delete"))
+	log := logger.With(slog.String("handler", "product_get_all"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Info("attempt to get all products")
 		products, err := productAllGetter.GetAllProduct(context.Background())
@@ -80,7 +87,7 @@ func ProductGetAll(logger *slog.Logger, productAllGetter productAllGetter) http.
 }
 
 func ProductGetAllByCategory(logger *slog.Logger, pg productAllByCatCodeGetter) http.HandlerFunc {
-	log := logger.With(slog.String("handler", "product_delete"))
+	log := logger.With(slog.String("handler", "product_get_all_by_category"))
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Info("attempt to get all products by category code")
 		catCode, ok := mux.Vars(r)["catCode"]
