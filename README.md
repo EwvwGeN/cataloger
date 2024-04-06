@@ -100,16 +100,16 @@ You can start only service by launching Dockerfile or start service with the dat
 Request:
 ```
 curl --location --request POST 'localhost:9999/api/register' \
---header 'Content-Type: application/json' \
+--header 'Content-Type: application/' \
 --data-raw '{
     "email": "newuser@email.com",
     "password":"t"
 }'
 ```
 Response
-```json
+```
 HTTP/1.1 201 Created
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 09:51:00 GMT
 Content-Length: 19
  
@@ -120,16 +120,16 @@ Content-Length: 19
 Request:
 ```
 curl --location --request POST 'localhost:9999/api/login' \
---header 'Content-Type: application/json' \
+--header 'Content-Type: application/' \
 --data-raw '{
     "email": "newuser@email.com",
     "password":"t"
 }'
 ```
 Response
-```json
+```
 HTTP/1.1 200 OK
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 09:52:56 GMT
 Content-Length: 303
  
@@ -144,7 +144,7 @@ Content-Length: 303
 Request:
 ```
 curl --location --request POST 'localhost:9999/api/refresh' \
---header 'Content-Type: application/json' \
+--header 'Content-Type: application/' \
 --data '{
     "token_pair": {
         "access_token": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ld3VzZXJAZW1haWwuY29tIiwiZXhwIjoxNzEzMjYxMTc1fQ.W_p3bxqo3pC8F3izno9PiHW1WQgcDXtGjg0xcnPnHPMQ5VEfh0GlRZq7JKP_d8Bp_uNzyZFlzZDzjcUs9RDRLQ",
@@ -153,9 +153,9 @@ curl --location --request POST 'localhost:9999/api/refresh' \
 }'
 ```
 Response
-```json
+```
 HTTP/1.1 200 OK
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 09:53:41 GMT
 Content-Length: 303
 
@@ -173,7 +173,7 @@ Content-Length: 303
 Request:
 ```
 curl --location --request POST 'localhost:9999/api/category/add' \
---header 'Content-Type: application/json' \
+--header 'Content-Type: application/' \
 --header 'Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ld3VzZXJAZW1haWwuY29tIiwiZXhwIjoxNzEzMjYxMjIxfQ.puFqUPFfCEQVoynBhLDkwtflAVAuNXqiDSP09tCEmanZDEYxm2f0jSlFM17RtA9jIRmfJGHqp4SqTSxzY1zixQ' \
 --data '{
     "category": {
@@ -184,9 +184,9 @@ curl --location --request POST 'localhost:9999/api/category/add' \
 }'
 ```
 Response
-```json
+```
 HTTP/1.1 201 Created
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 10:00:03 GMT
 Content-Length: 14
  
@@ -200,9 +200,9 @@ Request:
 curl --location --request GET 'localhost:9999/api/category/new_test_category'
 ```
 Response
-```json
+```
 HTTP/1.1 200 OK
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 10:01:22 GMT
 Content-Length: 113
 
@@ -218,7 +218,7 @@ Content-Length: 113
 Request:
 ```
 curl --location --request PATCH 'localhost:9999/api/category/new_test_category/edit' \
---header 'Content-Type: application/json' \
+--header 'Content-Type: application/' \
 --header 'Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ld3VzZXJAZW1haWwuY29tIiwiZXhwIjoxNzEzMjYxMjIxfQ.puFqUPFfCEQVoynBhLDkwtflAVAuNXqiDSP09tCEmanZDEYxm2f0jSlFM17RtA9jIRmfJGHqp4SqTSxzY1zixQ' \
 --data '{
     "category_new_data": {
@@ -228,9 +228,9 @@ curl --location --request PATCH 'localhost:9999/api/category/new_test_category/e
 }'
 ```
 Response
-```json
+```
 HTTP/1.1 200 OK
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 10:02:59 GMT
 Content-Length: 15
 
@@ -245,7 +245,7 @@ curl --location --request DELETE 'localhost:9999/api/category/new_code_for_categ
 --header 'Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ld3VzZXJAZW1haWwuY29tIiwiZXhwIjoxNzEzMjYxMjIxfQ.puFqUPFfCEQVoynBhLDkwtflAVAuNXqiDSP09tCEmanZDEYxm2f0jSlFM17RtA9jIRmfJGHqp4SqTSxzY1zixQ'
 ```
 Response
-```json
+```
 HTTP/1.1 200 OK
 Date: Sat, 06 Apr 2024 10:04:15 GMT
 Content-Length: 0
@@ -257,7 +257,7 @@ Content-Length: 0
 Request:
 ```
 curl --location --request POST 'localhost:9999/api/product/add' \
---header 'Content-Type: application/json' \
+--header 'Content-Type: application/' \
 --header 'Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ld3VzZXJAZW1haWwuY29tIiwiZXhwIjoxNzEzMjYxMjIxfQ.puFqUPFfCEQVoynBhLDkwtflAVAuNXqiDSP09tCEmanZDEYxm2f0jSlFM17RtA9jIRmfJGHqp4SqTSxzY1zixQ' \
 --data '{
     "product": {
@@ -268,9 +268,9 @@ curl --location --request POST 'localhost:9999/api/product/add' \
 }'
 ```
 Response:
-```json
+```
 HTTP/1.1 201 Created
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 12:11:27 GMT
 Content-Length: 21
 
@@ -285,9 +285,9 @@ Get by Id request:
 curl --location --request GET 'localhost:9999/api/product/5351'
 ```
 Get by Id response:
-```json
+```
 HTTP/1.1 200 OK
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 12:12:47 GMT
 Content-Length: 105
 
@@ -308,9 +308,9 @@ Get by category request:
 curl --location --request GET 'localhost:9999/api/products/test_category_one'
 ```
 Get by category response:
-```json
+```
 HTTP/1.1 200 OK
-Content-Type: application/json
+Content-Type: application/
 Date: Sat, 06 Apr 2024 12:18:15 GMT
 Content-Length: 108
 
@@ -331,7 +331,7 @@ Content-Length: 108
 Request:
 ```
 curl --location --request PATCH 'localhost:9999/api/product/5351/edit' \
---header 'Content-Type: application/json' \
+--header 'Content-Type: application/' \
 --header 'Authorization: Bearer eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im5ld3VzZXJAZW1haWwuY29tIiwiZXhwIjoxNzEzMjYxMjIxfQ.puFqUPFfCEQVoynBhLDkwtflAVAuNXqiDSP09tCEmanZDEYxm2f0jSlFM17RtA9jIRmfJGHqp4SqTSxzY1zixQ' \
 --data '{
     "product_new_data": {
@@ -340,7 +340,7 @@ curl --location --request PATCH 'localhost:9999/api/product/5351/edit' \
 }'
 ```
 Response:
-```json
+```
 HTTP/1.1 200 OK
 Date: Sat, 06 Apr 2024 12:14:21 GMT
 Content-Length: 0
@@ -354,7 +354,7 @@ curl --location --request DELETE 'localhost:9999/api/product/5351/delete' \
 ```
 
 Response:
-```json
+```
 HTTP/1.1 200 OK
 Date: Sat, 06 Apr 2024 12:15:41 GMT
 Content-Length: 0
