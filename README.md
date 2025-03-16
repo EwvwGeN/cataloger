@@ -1,4 +1,4 @@
-# InHouseAd_assignment
+# Cataloger
 
 Simple API for work with products, catalogs and user
 
