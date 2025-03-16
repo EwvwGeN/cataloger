@@ -5,8 +5,8 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/storage"
+	"github.com/EwvwGeN/cataloger/internal/domain/models"
+	"github.com/EwvwGeN/cataloger/internal/storage"
 )
 
 //go:generate go run github.com/vektra/mockery/v2@v2.40.3 --name=productRepo --exported

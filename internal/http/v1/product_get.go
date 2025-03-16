@@ -7,9 +7,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
+	"github.com/EwvwGeN/cataloger/internal/domain/httpmodels"
+	"github.com/EwvwGeN/cataloger/internal/domain/models"
+	"github.com/EwvwGeN/cataloger/internal/service"
 	"github.com/gorilla/mux"
 )
 

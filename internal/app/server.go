@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/config"
-	v1 "github.com/EwvwGeN/InHouseAd_assignment/internal/http/v1"
+	"github.com/EwvwGeN/cataloger/internal/config"
+	v1 "github.com/EwvwGeN/cataloger/internal/http/v1"
 	"github.com/gorilla/mux"
 )
 

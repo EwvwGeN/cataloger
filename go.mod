@@ -1,4 +1,4 @@
-module github.com/EwvwGeN/InHouseAd_assignment
+module github.com/EwvwGeN/cataloger
 
 go 1.21.5
 

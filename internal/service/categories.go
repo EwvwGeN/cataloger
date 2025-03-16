@@ -5,8 +5,8 @@ import (
 	"errors"
 	"log/slog"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/storage"
+	"github.com/EwvwGeN/cataloger/internal/domain/models"
+	"github.com/EwvwGeN/cataloger/internal/storage"
 )
 
 type categoryService struct {

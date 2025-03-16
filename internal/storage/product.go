@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/cataloger/internal/domain/models"
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )

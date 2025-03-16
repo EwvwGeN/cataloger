@@ -7,8 +7,8 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/storage"
+	"github.com/EwvwGeN/cataloger/internal/domain/models"
+	"github.com/EwvwGeN/cataloger/internal/storage"
 	"golang.org/x/crypto/bcrypt"
 )
 

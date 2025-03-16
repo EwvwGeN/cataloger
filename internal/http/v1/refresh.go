@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/httpmodels"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/cataloger/internal/domain/httpmodels"
+	"github.com/EwvwGeN/cataloger/internal/domain/models"
 )
 
 type refresher interface {

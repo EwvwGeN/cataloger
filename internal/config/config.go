@@ -9,8 +9,6 @@ import (
 
 type Config struct {
 	LogLevel     string     `yaml:"log_level"`
-	DataCollectTime time.Duration `yaml:"data_collect_time"`
-	DataCollectLink string `yaml:"data_collect_link"`
 	HttpConfig   HttpConfig `yaml:"http"`
 	PostgresConfig PostgresConfig `yaml:"postgres"`
 	Validator    Validator  `yaml:"validator"`

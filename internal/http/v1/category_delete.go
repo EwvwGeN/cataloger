@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
+	"github.com/EwvwGeN/cataloger/internal/service"
 	"github.com/gorilla/mux"
 )
 

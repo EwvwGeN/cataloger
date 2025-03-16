@@ -1,6 +1,6 @@
 package httpmodels
 
-import "github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+import "github.com/EwvwGeN/cataloger/internal/domain/models"
 
 type LoginRequest struct {
 	Email    string `json:"email"`

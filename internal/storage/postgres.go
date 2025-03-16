@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/config"
+	"github.com/EwvwGeN/cataloger/internal/config"
 	"github.com/jackc/pgx/v4"
 )
 

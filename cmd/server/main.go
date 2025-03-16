@@ -9,18 +9,15 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/app"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/background"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/background/parser"
-	c "github.com/EwvwGeN/InHouseAd_assignment/internal/config"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/http/middleware"
-	v1 "github.com/EwvwGeN/InHouseAd_assignment/internal/http/v1"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/jwt"
-	l "github.com/EwvwGeN/InHouseAd_assignment/internal/logger"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/service"
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/storage"
+	"github.com/EwvwGeN/cataloger/internal/app"
+	c "github.com/EwvwGeN/cataloger/internal/config"
+	"github.com/EwvwGeN/cataloger/internal/http/middleware"
+	v1 "github.com/EwvwGeN/cataloger/internal/http/v1"
+	"github.com/EwvwGeN/cataloger/internal/jwt"
+	l "github.com/EwvwGeN/cataloger/internal/logger"
+	"github.com/EwvwGeN/cataloger/internal/service"
+	"github.com/EwvwGeN/cataloger/internal/storage"
 )
 
 var (
@@ -52,20 +49,6 @@ func main() {
 	authService := service.NewAuthService(logger, cfg.TokenTTL, cfg.RefreshTTL, postgres, jwtManager)
 	categoryService := service.NewCategoryService(logger, postgres)
 	productService := service.NewProductService(logger, postgres, postgres)
-
-	go func ()  {
-DATACOLLECTORLOOP:
-		for {
-			select {
-			case <- mainCtx.Done():
-				break DATACOLLECTORLOOP
-			case <- time.After(cfg.DataCollectTime):
-				background.DataCollector(logger, cfg.Validator, parser.ParseFromEmojihub, 
-					background.GetProductAdder(logger, postgres, postgres),
-				)(mainCtx, cfg.DataCollectLink)
-			}
-		}
-	}()
 
 	hserver := app.NewHttpServer(cfg.HttpConfig, logger)
 	hserver.RegisterHandler(

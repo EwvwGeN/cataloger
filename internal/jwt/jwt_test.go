@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/EwvwGeN/InHouseAd_assignment/internal/domain/models"
+	"github.com/EwvwGeN/cataloger/internal/domain/models"
 	"github.com/stretchr/testify/suite"
 )
 

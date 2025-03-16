@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	myhttp "github.com/EwvwGeN/InHouseAd_assignment/internal/http"
+	myhttp "github.com/EwvwGeN/cataloger/internal/http"
 )
 
 type jwtParser interface {
